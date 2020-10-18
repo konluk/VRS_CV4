@@ -49,34 +49,54 @@ int main(void)
 
 
   /* Configure external interrupt - EXTI*/
+  //type your code for EXTI configuration (priority, enable EXTI, setup EXTI for input pin, trigger edge) here:
 
-  	  //type your code for EXTI configuration (priority, enable EXTI, setup EXTI for input pin, trigger edge) here:
+  /*EXTI configuration*/
+   NVIC_SetPriority(EXTI4_IRQn, 2);
+   NVIC_EnableIRQ(EXTI4_IRQn);
+   //Set interrupt priority and enable EXTI
+   /*set EXTI source PAA*/
+   SYSCFG->EXTICR[1] &= ~(0xFU << 0U);
+   SYSCFG->EXTICR[1] |= (1 <<0U);
+   //Enable interrupt from EXTI line 3
+   EXTI->IMR |= EXTI_IMR_MR4;
+   //Set EXTI trigger to falling edge
+   EXTI->RTSR &= ~(EXTI_IMR_MR4);
+   EXTI->FTSR |= EXTI_IMR_MR4;
+
 
 
   /* Configure GPIOB-4 pin as an input pin - button */
-
 	  //type your code for GPIO configuration here:
-
+  RCC->AHBENR |= RCC_AHBENR_GPIOAEN;
+  GPIOB->MODER &= ~(GPIO_MODER_MODER4);
+  GPIOB->PUPDR &= ~(GPIO_PUPDR_PUPDR4);
+  GPIOB->PUPDR |= GPIO_PUPDR_PUPDR4_0;
 
   /* Configure GPIOA-4 pin as an output pin - LED */
-
 	  //type your code for GPIO configuration here:
-
+  RCC->AHBENR |= RCC_AHBENR_GPIOBEN;
+  GPIOA->MODER &= ~(GPIO_MODER_MODER4);
+  GPIOA->MODER |= GPIO_MODER_MODER4_0;
+  GPIOA->OTYPER &= ~(GPIO_OTYPER_OT_4);
+  GPIOA->OSPEEDR &= ~(GPIO_OSPEEDER_OSPEEDR4);
+  GPIOA->PUPDR &= ~(GPIO_PUPDR_PUPDR4);
 
   while (1)
   {
 	  // Modify the code below so it sets/resets used output pin connected to the LED
 	  if(switch_state)
 	  {
-		  GPIOB->BSRR |= GPIO_BSRR_BS_3;
+		  GPIOA->BSRR |= GPIO_BSRR_BS_4;
 		  for(uint16_t i=0; i<0xFF00; i++){}
-		  GPIOB->BRR |= GPIO_BRR_BR_3;
+		  GPIOA->BRR |= GPIO_BRR_BR_4;
 		  for(uint16_t i=0; i<0xFF00; i++){}
 	  }
 	  else
 	  {
-		  GPIOB->BRR |= GPIO_BRR_BR_3;
+		  GPIOA->BRR |= GPIO_BRR_BR_4;
 	  }
+
   }
 
 }
@@ -125,18 +145,22 @@ uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t 
 
 void EXTI4_IRQHandler(void)
 {
-	if(checkButtonState(GPIO_PORT_BUTTON,
+/*	if(checkButtonState(GPIO_PORT_BUTTON,
 						GPIO_PIN_BUTTON,
 						BUTTON_EXTI_TRIGGER,
 						BUTTON_EXTI_SAMPLES_WINDOW,
 						BUTTON_EXTI_SAMPLES_REQUIRED))
 	{
 		switch_state ^= 1;
-	}
+	}*/
+
+	switch_state ^= 1;
+	LL_mDelay(422);
 
 	/* Clear EXTI4 pending register flag */
 
 		//type your code for pending register flag clear here:
+	EXTI->PR |= (EXTI_PR_PIF3);
 }
 
 /* USER CODE BEGIN 4 */
