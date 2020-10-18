@@ -85,6 +85,8 @@ int main(void)
   while (1)
   {
 	  // Modify the code below so it sets/resets used output pin connected to the LED
+
+
 	  if(switch_state)
 	  {
 		  GPIOA->BSRR |= GPIO_BSRR_BS_4;
@@ -96,6 +98,8 @@ int main(void)
 	  {
 		  GPIOA->BRR |= GPIO_BRR_BR_4;
 	  }
+
+
 
   }
 
@@ -139,13 +143,24 @@ void SystemClock_Config(void)
 
 uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t samples_window, uint8_t samples_required)
 {
-	  //type your code for "checkButtonState" implementation here:
+
+	int sample = 0;
+
+	for(uint16_t i=0; i<=samples_window; i++){
+		 if(!((PORT->IDR & (1 << PIN)))){
+			 sample++;
+		 }else{
+			 sample = 0;
+		 }
+		 if(sample >= samples_required)return 1;
+	}
+	return 0;
 }
 
 
 void EXTI4_IRQHandler(void)
 {
-/*	if(checkButtonState(GPIO_PORT_BUTTON,
+	/*if(checkButtonState(GPIO_PORT_BUTTON,
 						GPIO_PIN_BUTTON,
 						BUTTON_EXTI_TRIGGER,
 						BUTTON_EXTI_SAMPLES_WINDOW,
@@ -153,9 +168,11 @@ void EXTI4_IRQHandler(void)
 	{
 		switch_state ^= 1;
 	}*/
+	GPIOA->BSRR |= GPIO_BSRR_BS_4;
+			  for(uint16_t i=0; i<0xFF00; i++){}
+			  GPIOA->BRR |= GPIO_BRR_BR_4;
 
-	switch_state ^= 1;
-	LL_mDelay(422);
+
 
 	/* Clear EXTI4 pending register flag */
 
