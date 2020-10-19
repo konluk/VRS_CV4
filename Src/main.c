@@ -100,7 +100,6 @@ int main(void)
 	  }
 
 
-
   }
 
 }
@@ -144,14 +143,11 @@ void SystemClock_Config(void)
 uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t samples_window, uint8_t samples_required)
 {
 
-	//int sample = 0;
-
-	//start
 	uint8_t button_state = 0, timeout = 0;
 
 		while(button_state < samples_required && timeout < samples_window)
 		{
-			if(!(PORT->IDR & (1 << PIN))/*LL_GPIO_IsInputPinSet(PORT, PIN)*/)
+			if(((PORT->IDR & (1 << PIN) && edge == 1) || (!(PORT->IDR & (1 << PIN)) && edge == 0))/*LL_GPIO_IsInputPinSet(PORT, PIN)*/)
 			{
 				button_state += 1;
 			}
@@ -173,16 +169,6 @@ uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t 
 			return 0;
 		}
 
-		////////////////end
-/*	for(uint16_t i=0; i<=samples_window; i++){
-		 if(!((PORT->IDR & (1 << PIN)))){
-			 sample++;
-		 }else{
-			 sample = 0;
-		 }
-		 if(sample >= samples_required)return 1;
-	}
-	return 0;*/
 }
 
 
@@ -196,12 +182,6 @@ void EXTI4_IRQHandler(void)
 	{
 		switch_state ^= 1;
 	}
-
-	//TEST CODE!!
-	//GPIOA->BSRR |= GPIO_BSRR_BS_4;
-	//for(uint16_t i=0; i<0xFF00; i++){}
-	//GPIOA->BRR |= GPIO_BRR_BR_4;
-	//**********
 
 
 	/* Clear EXTI4 pending register flag */
