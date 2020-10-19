@@ -61,8 +61,8 @@ int main(void)
    //Enable interrupt from EXTI line 3
    EXTI->IMR |= EXTI_IMR_MR4;
    //Set EXTI trigger to falling edge
-   EXTI->RTSR &= ~(EXTI_IMR_MR4);
-   EXTI->FTSR |= EXTI_IMR_MR4;
+   EXTI->RTSR &= ~(EXTI_RTSR_RT4);
+   EXTI->FTSR |= EXTI_FTSR_FT4;
 
 
 
@@ -87,7 +87,7 @@ int main(void)
 	  // Modify the code below so it sets/resets used output pin connected to the LED
 
 
-	  if(switch_state)
+	  if(switch_state )
 	  {
 		  GPIOA->BSRR |= GPIO_BSRR_BS_4;
 		  for(uint16_t i=0; i<0xFF00; i++){}
@@ -141,45 +141,42 @@ void SystemClock_Config(void)
 }
 
 
-uint8_t checkButtonState(GPIO_TypeDef* PORT, uint8_t PIN, uint8_t edge, uint8_t samples_window, uint8_t samples_required)
+uint8_t check_button_state(GPIO_TypeDef* PORT, uint8_t PIN)
 {
+	uint8_t button_state = 0, timeout = 0;
 
-	int sample = 0;
-
-	for(uint16_t i=0; i<=samples_window; i++){
-		 if(!((PORT->IDR & (1 << PIN)))){
-			 sample++;
-		 }else{
-			 sample = 0;
-		 }
-		 if(sample >= samples_required)return 1;
-	}
-	return 0;
-}
-
-
-void EXTI4_IRQHandler(void)
-{
-	/*if(checkButtonState(GPIO_PORT_BUTTON,
-						GPIO_PIN_BUTTON,
-						BUTTON_EXTI_TRIGGER,
-						BUTTON_EXTI_SAMPLES_WINDOW,
-						BUTTON_EXTI_SAMPLES_REQUIRED))
+	while(button_state < 200 && timeout < 400)
 	{
-		switch_state ^= 1;
-	}*/
-	GPIOA->BSRR |= GPIO_BSRR_BS_4;
-			  for(uint16_t i=0; i<0xFF00; i++){}
-			  GPIOA->BRR |= GPIO_BRR_BR_4;
+		if(LL_GPIO_IsInputPinSet(PORT, PIN))
+		{
+			button_state += 1;
+		}
+		else
+		{
+			button_state = 0;
+		}
 
+		timeout += 1;
+		LL_mDelay(1);
+	}
 
-
-	/* Clear EXTI4 pending register flag */
-
-		//type your code for pending register flag clear here:
-	EXTI->PR |= (EXTI_PR_PIF3);
+	if((button_state >= 200) && (timeout <= 400))
+	{
+		return 1;
+	}
+	else
+	{
+		return 0;
+	}
 }
 
+
+void EXTI4_IRQHandler(void) {
+	if(check_button_state(GPIOB, 4)) {
+		switch_state  ^= 1;
+	}
+	EXTI->PR |= EXTI_PR_PR4;
+}
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
